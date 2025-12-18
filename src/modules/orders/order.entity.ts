@@ -35,6 +35,24 @@ export class Order {
     @Column({ type: "decimal", precision: 10, scale: 2 })
     total_amount: number
 
+    // Commission fields - 5% admin commission
+    @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
+    admin_commission: number
+
+    @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
+    seller_amount: number
+
+    // Payment tracking - all payments go to admin wallet
+    @Column({ default: false })
+    payment_received: boolean
+
+    // Seller payout status
+    @Column({ default: "pending" })
+    payout_status: "pending" | "requested" | "processing" | "completed";
+
+    @Column({ nullable: true })
+    payout_id: number
+
     @CreateDateColumn()
     created_at: Date
 

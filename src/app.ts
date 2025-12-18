@@ -12,6 +12,11 @@ import { cartRoutes } from "./modules/carts";
 import { orderRoutes } from "./modules/orders";
 import { addressRoutes } from "./modules/addresses";
 import { reviewRoutes } from "./modules/reviews";
+import { verificationRoutes } from "./modules/verification/verification.routes";
+import { sellerDocumentsRoutes } from "./modules/sellerDocuments/sellerDocuments.routes";
+import { adminRoutes } from "./modules/admin";
+import { payoutRoutes } from "./modules/payouts";
+import { supportRoutes } from "./modules/support";
 
 const app = express();
 
@@ -50,6 +55,21 @@ app.use("/addresses", addressRoutes);
 
 // Review routes - /reviews/* (mixed public/authenticated)
 app.use("/reviews", reviewRoutes);
+
+// Verification routes - /verify/* (OTP testing)
+app.use("/verify", verificationRoutes);
+
+// Seller Documents routes - /seller/kyc/*
+app.use("/seller/kyc", sellerDocumentsRoutes);
+
+// Admin routes - /admin/* (admin authentication and management)
+app.use("/admin", adminRoutes);
+
+// Payout routes - /payouts/* (seller payouts)
+app.use("/payouts", payoutRoutes);
+
+// Support routes - /support/* (customer support tickets)
+app.use("/support", supportRoutes);
 
 // ============== HEALTH CHECK ==============
 

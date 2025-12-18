@@ -1,39 +1,27 @@
 import { Request, Response } from "express";
 import { sellerDocumentsService } from "./sellerDocuments.service";
 import {
-    UploadDocumentRequest,
-    UpdateDocumentRequest
+    SubmitPanKycRequest,
+    UpdatePanKycRequest,
+    SubmitAadhaarKycRequest,
+    UpdateAadhaarKycRequest,
+    SubmitBankKycRequest,
+    UpdateBankKycRequest
 } from "./sellerDocuments.types";
 import { AuthError } from "../auth/auth.types";
 
 export class SellerDocumentsController {
 
-    /**
-     * GET /seller/documents
-     * Get all documents for the seller
-     */
-    async getDocuments(req: Request, res: Response): Promise<void> {
-        try {
-            const userId = req.userId!;
-            const documents = await sellerDocumentsService.getDocuments(userId);
-
-            res.status(200).json({
-                success: true,
-                data: documents
-            });
-        } catch (error) {
-            this.handleError(error, res);
-        }
-    }
+    // ============== KYC STATUS ==============
 
     /**
-     * GET /seller/documents/status
-     * Get verification status
+     * GET /seller/kyc/status
+     * Get overall KYC status for the seller
      */
-    async getVerificationStatus(req: Request, res: Response): Promise<void> {
+    async getKycStatus(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.userId!;
-            const status = await sellerDocumentsService.getVerificationStatus(userId);
+            const status = await sellerDocumentsService.getKycStatus(userId);
 
             res.status(200).json({
                 success: true,
@@ -44,25 +32,20 @@ export class SellerDocumentsController {
         }
     }
 
+    // ============== PAN KYC ==============
+
     /**
-     * GET /seller/documents/:id
-     * Get document by ID
+     * GET /seller/kyc/pan
+     * Get PAN KYC details
      */
-    async getDocumentById(req: Request, res: Response): Promise<void> {
+    async getPanKyc(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.userId!;
-            const documentId = parseInt(req.params.id, 10);
-
-            if (isNaN(documentId)) {
-                res.status(400).json({ success: false, message: "Invalid document ID" });
-                return;
-            }
-
-            const document = await sellerDocumentsService.getDocumentById(userId, documentId);
+            const pan = await sellerDocumentsService.getPanKyc(userId);
 
             res.status(200).json({
                 success: true,
-                data: document
+                data: pan
             });
         } catch (error) {
             this.handleError(error, res);
@@ -70,54 +53,28 @@ export class SellerDocumentsController {
     }
 
     /**
-     * GET /seller/documents/type/:type
-     * Get document by type
+     * POST /seller/kyc/pan
+     * Submit PAN KYC
      */
-    async getDocumentByType(req: Request, res: Response): Promise<void> {
+    async submitPanKyc(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.userId!;
-            const documentType = req.params.type;
+            const data: SubmitPanKycRequest = req.body;
 
-            const validTypes = ["aadhar", "pan", "gst", "bank"];
-            if (!validTypes.includes(documentType)) {
-                res.status(400).json({ success: false, message: "Invalid document type" });
-                return;
-            }
-
-            const document = await sellerDocumentsService.getDocumentByType(userId, documentType);
-
-            res.status(200).json({
-                success: true,
-                data: document
-            });
-        } catch (error) {
-            this.handleError(error, res);
-        }
-    }
-
-    /**
-     * POST /seller/documents
-     * Upload a new document
-     */
-    async uploadDocument(req: Request, res: Response): Promise<void> {
-        try {
-            const userId = req.userId!;
-            const data: UploadDocumentRequest = req.body;
-
-            if (!data.document_type || !data.document_number || !data.document_url) {
+            if (!data.pan_name || !data.pan_number) {
                 res.status(400).json({
                     success: false,
-                    message: "document_type, document_number, and document_url are required"
+                    message: "pan_name and pan_number are required"
                 });
                 return;
             }
 
-            const document = await sellerDocumentsService.uploadDocument(userId, data);
+            const pan = await sellerDocumentsService.submitPanKyc(userId, data);
 
             res.status(201).json({
                 success: true,
-                message: "Document uploaded successfully. It will be reviewed shortly.",
-                data: document
+                message: "PAN submitted successfully. Verification is pending.",
+                data: pan
             });
         } catch (error) {
             this.handleError(error, res);
@@ -125,26 +82,20 @@ export class SellerDocumentsController {
     }
 
     /**
-     * PATCH /seller/documents/:id
-     * Update a document
+     * PATCH /seller/kyc/pan
+     * Update PAN KYC
      */
-    async updateDocument(req: Request, res: Response): Promise<void> {
+    async updatePanKyc(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.userId!;
-            const documentId = parseInt(req.params.id, 10);
-            const data: UpdateDocumentRequest = req.body;
+            const data: UpdatePanKycRequest = req.body;
 
-            if (isNaN(documentId)) {
-                res.status(400).json({ success: false, message: "Invalid document ID" });
-                return;
-            }
-
-            const document = await sellerDocumentsService.updateDocument(userId, documentId, data);
+            const pan = await sellerDocumentsService.updatePanKyc(userId, data);
 
             res.status(200).json({
                 success: true,
-                message: "Document updated successfully. It will be reviewed shortly.",
-                data: document
+                message: "PAN updated successfully. Verification is pending.",
+                data: pan
             });
         } catch (error) {
             this.handleError(error, res);
@@ -152,35 +103,206 @@ export class SellerDocumentsController {
     }
 
     /**
-     * DELETE /seller/documents/:id
-     * Delete a document
+     * DELETE /seller/kyc/pan
+     * Delete PAN KYC
      */
-    async deleteDocument(req: Request, res: Response): Promise<void> {
+    async deletePanKyc(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.userId!;
-            const documentId = parseInt(req.params.id, 10);
-
-            if (isNaN(documentId)) {
-                res.status(400).json({ success: false, message: "Invalid document ID" });
-                return;
-            }
-
-            await sellerDocumentsService.deleteDocument(userId, documentId);
+            await sellerDocumentsService.deletePanKyc(userId);
 
             res.status(200).json({
                 success: true,
-                message: "Document deleted successfully"
+                message: "PAN record deleted successfully"
             });
         } catch (error) {
             this.handleError(error, res);
         }
     }
+
+    // ============== AADHAAR KYC ==============
+
+    /**
+     * GET /seller/kyc/aadhaar
+     * Get Aadhaar KYC details
+     */
+    async getAadhaarKyc(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.userId!;
+            const aadhaar = await sellerDocumentsService.getAadhaarKyc(userId);
+
+            res.status(200).json({
+                success: true,
+                data: aadhaar
+            });
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    }
+
+    /**
+     * POST /seller/kyc/aadhaar
+     * Submit Aadhaar KYC
+     */
+    async submitAadhaarKyc(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.userId!;
+            const data: SubmitAadhaarKycRequest = req.body;
+
+            if (!data.aadhaar_name || !data.aadhaar_number) {
+                res.status(400).json({
+                    success: false,
+                    message: "aadhaar_name and aadhaar_number are required"
+                });
+                return;
+            }
+
+            const aadhaar = await sellerDocumentsService.submitAadhaarKyc(userId, data);
+
+            res.status(201).json({
+                success: true,
+                message: "Aadhaar submitted successfully. Verification is pending.",
+                data: aadhaar
+            });
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    }
+
+    /**
+     * PATCH /seller/kyc/aadhaar
+     * Update Aadhaar KYC
+     */
+    async updateAadhaarKyc(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.userId!;
+            const data: UpdateAadhaarKycRequest = req.body;
+
+            const aadhaar = await sellerDocumentsService.updateAadhaarKyc(userId, data);
+
+            res.status(200).json({
+                success: true,
+                message: "Aadhaar updated successfully. Verification is pending.",
+                data: aadhaar
+            });
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    }
+
+    /**
+     * DELETE /seller/kyc/aadhaar
+     * Delete Aadhaar KYC
+     */
+    async deleteAadhaarKyc(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.userId!;
+            await sellerDocumentsService.deleteAadhaarKyc(userId);
+
+            res.status(200).json({
+                success: true,
+                message: "Aadhaar record deleted successfully"
+            });
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    }
+
+    // ============== BANK KYC ==============
+
+    /**
+     * GET /seller/kyc/bank
+     * Get Bank KYC details
+     */
+    async getBankKyc(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.userId!;
+            const bank = await sellerDocumentsService.getBankKyc(userId);
+
+            res.status(200).json({
+                success: true,
+                data: bank
+            });
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    }
+
+    /**
+     * POST /seller/kyc/bank
+     * Submit Bank KYC
+     */
+    async submitBankKyc(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.userId!;
+            const data: SubmitBankKycRequest = req.body;
+
+            if (!data.account_holder_name || !data.account_number || !data.ifsc_code) {
+                res.status(400).json({
+                    success: false,
+                    message: "account_holder_name, account_number, and ifsc_code are required"
+                });
+                return;
+            }
+
+            const bank = await sellerDocumentsService.submitBankKyc(userId, data);
+
+            res.status(201).json({
+                success: true,
+                message: "Bank details submitted successfully. Verification is pending.",
+                data: bank
+            });
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    }
+
+    /**
+     * PATCH /seller/kyc/bank
+     * Update Bank KYC
+     */
+    async updateBankKyc(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.userId!;
+            const data: UpdateBankKycRequest = req.body;
+
+            const bank = await sellerDocumentsService.updateBankKyc(userId, data);
+
+            res.status(200).json({
+                success: true,
+                message: "Bank details updated successfully. Verification is pending.",
+                data: bank
+            });
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    }
+
+    /**
+     * DELETE /seller/kyc/bank
+     * Delete Bank KYC
+     */
+    async deleteBankKyc(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.userId!;
+            await sellerDocumentsService.deleteBankKyc(userId);
+
+            res.status(200).json({
+                success: true,
+                message: "Bank record deleted successfully"
+            });
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    }
+
+    // ============== ERROR HANDLER ==============
 
     /**
      * Centralized error handler
      */
     private handleError(error: unknown, res: Response): void {
-        console.error("SellerDocuments Error:", error);
+        console.error("SellerKYC Error:", error);
 
         if (error instanceof AuthError) {
             res.status(error.statusCode).json({

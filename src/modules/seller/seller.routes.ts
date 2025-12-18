@@ -172,8 +172,9 @@ router.get("/payouts", (req: Request, res: Response) =>
     sellerController.getPayouts(req, res)
 );
 
-// ============== DOCUMENTS (mounted from sellerDocuments module) ==============
-// Routes: /seller/documents/*
-router.use("/documents", sellerDocumentsRoutes);
+// ============== KYC (mounted from sellerDocuments module) ==============
+// Routes: /seller/kyc/*
+router.use("/kyc", sellerDocumentsRoutes);
 
 export { router as sellerRoutes };
+

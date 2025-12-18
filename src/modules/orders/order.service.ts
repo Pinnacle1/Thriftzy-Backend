@@ -16,6 +16,7 @@ import {
     StoreOrderGroup
 } from "./order.types";
 import { NotFoundError, ValidationError } from "../auth/auth.types";
+import { adminService } from "../admin/admin.service";
 
 export class OrderService {
     private orderRepository: Repository<Order>;
@@ -450,13 +451,22 @@ export class OrderService {
         addressId: number,
         group: StoreOrderGroup
     ): Promise<Order> {
-        // Create order
+        // Calculate commission (fetch dynamic rate from admin settings)
+        const COMMISSION_RATE = await adminService.getCurrentCommissionRate();
+        const adminCommission = Math.round(group.subtotal * COMMISSION_RATE * 100) / 100;
+        const sellerAmount = Math.round((group.subtotal - adminCommission) * 100) / 100;
+
+        // Create order with commission breakdown
         const order = this.orderRepository.create({
             user_id: userId,
             store_id: group.store_id,
             address_id: addressId,
             status: "pending",
-            total_amount: group.subtotal
+            total_amount: group.subtotal,
+            admin_commission: adminCommission,
+            seller_amount: sellerAmount,
+            payment_received: false,
+            payout_status: "pending"
         });
 
         await this.orderRepository.save(order);

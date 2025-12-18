@@ -439,6 +439,8 @@ export class SellerService {
             .createQueryBuilder("order")
             .leftJoinAndSelect("order.items", "items")
             .leftJoinAndSelect("items.product", "product")
+            .leftJoinAndSelect("product.images", "images")
+            .leftJoinAndSelect("order.payment", "payment")
             .leftJoinAndSelect("order.user", "user")
             .leftJoinAndSelect("order.address", "address")
             .where("order.store_id IN (:...storeIds)", { storeIds });
@@ -473,7 +475,7 @@ export class SellerService {
 
         const order = await this.orderRepository.findOne({
             where: { id: orderId },
-            relations: ["items", "items.product", "user", "address"]
+            relations: ["items", "items.product", "items.product.images", "payment", "user", "address"]
         });
 
         if (!order || !storeIds.includes(order.store_id)) {
@@ -490,7 +492,7 @@ export class SellerService {
 
         const order = await this.orderRepository.findOne({
             where: { id: orderId },
-            relations: ["items", "items.product", "user", "address"]
+            relations: ["items", "items.product", "items.product.images", "payment", "user", "address"]
         });
 
         if (!order || !storeIds.includes(order.store_id)) {
@@ -498,8 +500,11 @@ export class SellerService {
         }
 
         // Validate status transition
+        // pending = new order, can be: shipped (COD), paid, or cancelled
+        // paid = payment received, can be: shipped or cancelled
+        // shipped = in transit, can be: delivered
         const validTransitions: Record<string, string[]> = {
-            "pending": ["cancelled"],
+            "pending": ["paid", "shipped", "cancelled"],
             "paid": ["shipped", "cancelled"],
             "shipped": ["delivered"],
             "delivered": [],
@@ -635,13 +640,21 @@ export class SellerService {
             user_email: order.user?.email || "",
             status: order.status,
             total_amount: order.total_amount,
-            items: order.items?.map(item => ({
-                id: item.id,
-                product_id: item.product_id,
-                product_title: item.product?.title || item.title,
-                quantity: item.quantity,
-                price_at_purchase: item.price_at_purchase
-            })) || [],
+            payment_method: order.payment?.payment_method || "cod",
+            items: order.items?.map(item => {
+                // Get the first image from product images
+                const productImages = item.product?.images || [];
+                const firstImage = productImages.sort((a, b) => a.position - b.position)[0];
+
+                return {
+                    id: item.id,
+                    product_id: item.product_id,
+                    product_title: item.product?.title || item.title,
+                    product_image: firstImage?.image_url || null,
+                    quantity: item.quantity,
+                    price_at_purchase: item.price_at_purchase
+                };
+            }) || [],
             shipping_address: order.address ? {
                 name: order.address.name,
                 phone: order.address.phone,
@@ -659,9 +672,14 @@ export class SellerService {
     private toPayoutResponse(payout: Payout): PayoutResponse {
         return {
             id: payout.id,
+            gross_amount: payout.gross_amount,
+            commission_amount: payout.commission_amount,
             amount: payout.amount,
             status: payout.status,
-            reason: payout.reason,
+            request_notes: payout.request_notes,
+            admin_notes: payout.admin_notes,
+            transaction_id: payout.transaction_id,
+            processed_at: payout.processed_at,
             created_at: payout.created_at
         };
     }

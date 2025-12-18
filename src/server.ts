@@ -1,5 +1,8 @@
 import * as dotenv from "dotenv";
-dotenv.config();
+import * as path from "path";
+
+// Load .env from src directory
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 import { AppDataSource } from "./db/data-source";
 import app from "./app";

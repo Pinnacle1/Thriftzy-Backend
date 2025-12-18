@@ -105,12 +105,12 @@ export const validateRequired = (value: unknown, fieldName: string): void => {
 
 
 export const validateLength = (
-    value: string,
+    value: string | undefined | null,
     fieldName: string,
     minLength: number,
     maxLength?: number
 ): void => {
-    if (value.length < minLength) {
+    if (!value || value.length < minLength) {
         throw new ValidationError(`${fieldName} must be at least ${minLength} characters`);
     }
     if (maxLength && value.length > maxLength) {

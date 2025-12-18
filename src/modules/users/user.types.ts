@@ -54,7 +54,7 @@ export interface SellerProfileSummary {
     gst_number: string;
     seller_status: "pending" | "approved" | "rejected";
     stores: StoreSummary[];
-    documents: DocumentSummary[];
+    kyc_documents: KycDocumentsSummary;
     created_at: Date;
 }
 
@@ -68,10 +68,32 @@ export interface StoreSummary {
     rating_count: number;
 }
 
-export interface DocumentSummary {
+export interface KycDocumentsSummary {
+    pan: PanKycSummary | null;
+    aadhaar: AadhaarKycSummary | null;
+    bank: BankKycSummary | null;
+}
+
+export interface PanKycSummary {
     id: number;
-    document_type: "aadhar" | "pan" | "gst" | "bank";
-    status: "pending" | "approved" | "rejected";
+    pan_name: string;
+    pan_last4: string;
+    verified: boolean;
+}
+
+export interface AadhaarKycSummary {
+    id: number;
+    aadhaar_name: string;
+    aadhaar_last4: string;
+    verified: boolean;
+}
+
+export interface BankKycSummary {
+    id: number;
+    account_holder_name: string;
+    account_last4: string;
+    ifsc_code: string;
+    verified: boolean;
 }
 
 export interface UserOrdersResponse {

@@ -9,7 +9,9 @@ import {
     JoinColumn
 } from "typeorm";
 import { User } from "../users/user.entity";
-import { SellerDocument } from "../sellerDocuments/sellerDocuments.entity";
+import { SellerPanKyc } from "../sellerDocuments/sellerPan.entity";
+import { SellerAadhaarKyc } from "../sellerDocuments/sellerAadhar.entity";
+import { SellerBankKyc } from "../sellerDocuments/sellerBank.entity";
 import { Payout } from "../payouts/payout.entity";
 import { Store } from "../stores/store.entity";
 
@@ -44,8 +46,15 @@ export class SellerProfile {
     @JoinColumn({ name: "user_id" })
     user: User;
 
-    @OneToMany(() => SellerDocument, (document) => document.seller_profile)
-    documents: SellerDocument[];
+    // KYC Documents
+    @OneToOne(() => SellerPanKyc, (panKyc) => panKyc.sellerProfile)
+    panKyc: SellerPanKyc;
+
+    @OneToOne(() => SellerAadhaarKyc, (aadhaarKyc) => aadhaarKyc.sellerProfile)
+    aadhaarKyc: SellerAadhaarKyc;
+
+    @OneToOne(() => SellerBankKyc, (bankKyc) => bankKyc.sellerProfile)
+    bankKyc: SellerBankKyc;
 
     @OneToMany(() => Payout, (payout) => payout.seller_profile)
     payouts: Payout[];

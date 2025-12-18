@@ -359,6 +359,12 @@ export class AuthService {
     // ============== PRIVATE HELPER METHODS ==============
 
     private async generateTokenPair(user: User, deviceInfo?: string, ipAddress?: string): Promise<TokenPair> {
+        // Sellers get 30-day access tokens with no refresh token logic
+        const SELLER_ACCESS_TOKEN_EXPIRY = 30 * 24 * 60 * 60; // 30 days in seconds
+        const isSeller = user.role === "seller";
+
+        const accessTokenExpiry = isSeller ? SELLER_ACCESS_TOKEN_EXPIRY : this.ACCESS_TOKEN_EXPIRY;
+
         const accessTokenPayload: JwtPayload = {
             userId: user.id,
             email: user.email,
@@ -374,31 +380,33 @@ export class AuthService {
         };
 
         const accessToken = jwt.sign(accessTokenPayload, this.JWT_SECRET, {
-            expiresIn: this.ACCESS_TOKEN_EXPIRY
+            expiresIn: accessTokenExpiry
         });
 
+        // For sellers, still generate a refresh token (for API compatibility) but don't store it
+        // For buyers, store refresh token as usual
         const refreshToken = jwt.sign(refreshTokenPayload, this.JWT_REFRESH_SECRET, {
             expiresIn: this.REFRESH_TOKEN_EXPIRY
         });
 
-        // Calculate expiry date for refresh token
-        const refreshExpiresAt = new Date(Date.now() + this.REFRESH_TOKEN_EXPIRY * 1000);
-
-        // Save refresh token to database
-        const refreshTokenRecord = this.refreshTokenRepository.create({
-            user_id: user.id,
-            token: refreshToken,
-            expires_at: refreshExpiresAt,
-            is_revoked: false,
-            device_info: deviceInfo,
-            ip_address: ipAddress
-        });
-        await this.refreshTokenRepository.save(refreshTokenRecord);
+        // Only save refresh token to database for non-sellers (buyers)
+        if (!isSeller) {
+            const refreshExpiresAt = new Date(Date.now() + this.REFRESH_TOKEN_EXPIRY * 1000);
+            const refreshTokenRecord = this.refreshTokenRepository.create({
+                user_id: user.id,
+                token: refreshToken,
+                expires_at: refreshExpiresAt,
+                is_revoked: false,
+                device_info: deviceInfo,
+                ip_address: ipAddress
+            });
+            await this.refreshTokenRepository.save(refreshTokenRecord);
+        }
 
         return {
             accessToken,
             refreshToken,
-            expiresIn: this.ACCESS_TOKEN_EXPIRY
+            expiresIn: accessTokenExpiry
         };
     }
 

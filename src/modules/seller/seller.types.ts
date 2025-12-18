@@ -117,6 +117,7 @@ export interface SellerOrderResponse {
     user_email: string;
     status: string;
     total_amount: number;
+    payment_method: string;
     items: SellerOrderItemResponse[];
     shipping_address: AddressResponse | null;
     created_at: Date;
@@ -126,6 +127,7 @@ export interface SellerOrderItemResponse {
     id: number;
     product_id: number;
     product_title: string;
+    product_image: string | null;
     quantity: number;
     price_at_purchase: number;
 }
@@ -143,9 +145,14 @@ export interface AddressResponse {
 
 export interface PayoutResponse {
     id: number;
+    gross_amount: number;
+    commission_amount: number;
     amount: number;
-    status: "pending" | "completed" | "failed";
-    reason: string | null;
+    status: "pending" | "requested" | "approved" | "processing" | "completed" | "rejected" | "failed";
+    request_notes?: string;
+    admin_notes?: string;
+    transaction_id?: string;
+    processed_at?: Date;
     created_at: Date;
 }
 
@@ -168,5 +175,5 @@ export interface OrderFilters extends PaginationOptions {
 }
 
 export interface PayoutFilters extends PaginationOptions {
-    status?: "pending" | "completed" | "failed";
+    status?: "pending" | "requested" | "approved" | "processing" | "completed" | "rejected" | "failed";
 }

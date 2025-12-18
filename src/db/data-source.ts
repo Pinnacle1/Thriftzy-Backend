@@ -4,7 +4,9 @@ dotenv.config();
 import { DataSource } from "typeorm";
 import { User } from "../modules/users/user.entity";
 import { SellerProfile } from "../modules/seller/sellerProfile.entity";
-import { SellerDocument } from "../modules/sellerDocuments/sellerDocuments.entity";
+import { SellerPanKyc } from "../modules/sellerDocuments/sellerPan.entity";
+import { SellerAadhaarKyc } from "../modules/sellerDocuments/sellerAadhar.entity";
+import { SellerBankKyc } from "../modules/sellerDocuments/sellerBank.entity";
 import { Store } from "../modules/stores/store.entity";
 import { Product } from "../modules/products/product.entity";
 import { ProductImage } from "../modules/products/productImage.entity";
@@ -19,6 +21,12 @@ import { Payout } from "../modules/payouts/payout.entity";
 import { Address } from "../modules/addresses/addresses.entity";
 // Auth entities
 import { RefreshToken } from "../modules/auth/refreshToken.entity";
+// Admin entities
+import { Admin } from "../modules/admin/admin.entity";
+import { AdminWallet } from "../modules/admin/adminWallet.entity";
+import { CommissionSettings } from "../modules/admin/commissionSettings.entity";
+// Support entities
+import { SupportTicket } from "../modules/support/supportTicket.entity";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -30,7 +38,10 @@ export const AppDataSource = new DataSource({
     entities: [
         User,
         SellerProfile,
-        SellerDocument,
+        // KYC Entities
+        SellerPanKyc,
+        SellerAadhaarKyc,
+        SellerBankKyc,
         Store,
         Product,
         ProductImage,
@@ -44,10 +55,17 @@ export const AppDataSource = new DataSource({
         Review,
         Payout,
         // Auth entities
-        RefreshToken
+        RefreshToken,
+        // Admin entities
+        Admin,
+        AdminWallet,
+        CommissionSettings,
+        // Support entities
+        SupportTicket
     ],
     migrations: [process.env.NODE_ENV === "production" ? "dist/migrations/*.js" : "src/migrations/*.ts"],
     subscribers: [process.env.NODE_ENV === "production" ? "dist/subscribers/*.js" : "src/subscribers/*.ts"],
     synchronize: process.env.TYPEORM_SYNCHRONIZE ? process.env.TYPEORM_SYNCHRONIZE === "true" : true,
     logging: process.env.TYPEORM_LOGGING === "true" ? true : false
 });
+

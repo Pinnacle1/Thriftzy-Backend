@@ -61,7 +61,13 @@ export class UserService {
     async getUserWithSellerProfile(userId: number): Promise<UserWithSellerProfile> {
         const user = await this.userRepository.findOne({
             where: { id: userId },
-            relations: ["seller_profile", "seller_profile.stores", "seller_profile.documents"]
+            relations: [
+                "seller_profile",
+                "seller_profile.stores",
+                "seller_profile.panKyc",
+                "seller_profile.aadhaarKyc",
+                "seller_profile.bankKyc"
+            ]
         });
 
         if (!user) {
@@ -394,11 +400,27 @@ export class UserService {
                     rating_avg: store.rating_avg,
                     rating_count: store.rating_count
                 })) || [],
-                documents: user.seller_profile.documents?.map(doc => ({
-                    id: doc.id,
-                    document_type: doc.document_type,
-                    status: doc.status
-                })) || [],
+                kyc_documents: {
+                    pan: user.seller_profile.panKyc ? {
+                        id: user.seller_profile.panKyc.id,
+                        pan_name: user.seller_profile.panKyc.pan_name,
+                        pan_last4: user.seller_profile.panKyc.pan_last4,
+                        verified: user.seller_profile.panKyc.verified
+                    } : null,
+                    aadhaar: user.seller_profile.aadhaarKyc ? {
+                        id: user.seller_profile.aadhaarKyc.id,
+                        aadhaar_name: user.seller_profile.aadhaarKyc.aadhaar_name,
+                        aadhaar_last4: user.seller_profile.aadhaarKyc.aadhaar_last4,
+                        verified: user.seller_profile.aadhaarKyc.verified
+                    } : null,
+                    bank: user.seller_profile.bankKyc ? {
+                        id: user.seller_profile.bankKyc.id,
+                        account_holder_name: user.seller_profile.bankKyc.account_holder_name,
+                        account_last4: user.seller_profile.bankKyc.account_last4,
+                        ifsc_code: user.seller_profile.bankKyc.ifsc_code,
+                        verified: user.seller_profile.bankKyc.verified
+                    } : null
+                },
                 created_at: user.seller_profile.created_at
             } : null
         };

@@ -1,4 +1,4 @@
-// Seller Documents Module - Barrel Export
+// Seller KYC Module - Barrel Export
 
 // Routes
 export { sellerDocumentsRoutes } from "./sellerDocuments.routes";
@@ -12,5 +12,7 @@ export { sellerDocumentsController, SellerDocumentsController } from "./sellerDo
 // Types
 export * from "./sellerDocuments.types";
 
-// Entity
-export { SellerDocument } from "./sellerDocuments.entity";
+// Entities
+export { SellerPanKyc } from "./sellerPan.entity";
+export { SellerAadhaarKyc } from "./sellerAadhar.entity";
+export { SellerBankKyc } from "./sellerBank.entity";
